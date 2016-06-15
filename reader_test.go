@@ -4,31 +4,44 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func Example() {
-	// testFile is a CSV file with CR line endings.
+func TestReaderForMac(t *testing.T) {
 	testFile := bytes.NewBufferString("a,b,c\r1,2,3\r").Bytes()
 
-	// First try reading the csv file the normal way.
-	// The CSV reader doesn't recognize the '\r' line ending.
-	r1 := csv.NewReader(bytes.NewReader(testFile))
-	lines1, err := r1.ReadAll()
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Printf("Without macreader: %#v\n", lines1)
-
-	// Now try reading the csv file using macreader.
-	// It should work as expected.
 	r2 := csv.NewReader(New(bytes.NewReader(testFile)))
 	lines2, err := r2.ReadAll()
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Printf("With macreader: %#v\n", lines2)
-
-	// Output: Without macreader: [][]string{[]string{"a", "b", "c\r1", "2", "3"}}
-	// With macreader: [][]string{[]string{"a", "b", "c"}, []string{"1", "2", "3"}}
-
+	expectedOutput := [][]string{[]string{"a", "b", "c"}, []string{"1", "2", "3"}}
+	assert.Equal(t, expectedOutput, lines2)
 }
+
+func TestReaderForUnix(t *testing.T) {
+	testFile := bytes.NewBufferString("a,b,c\n1,2,3\n").Bytes()
+
+	r2 := csv.NewReader(New(bytes.NewReader(testFile)))
+	lines2, err := r2.ReadAll()
+	if err != nil {
+		fmt.Println(err)
+	}
+	expectedOutput := [][]string{[]string{"a", "b", "c"}, []string{"1", "2", "3"}}
+	assert.Equal(t, expectedOutput, lines2)
+}
+
+func TestReaderForWindows(t *testing.T) {
+	testFile := bytes.NewBufferString("a,b,c\r\n1,2,3\r\n").Bytes()
+
+	r2 := csv.NewReader(New(bytes.NewReader(testFile)))
+	lines2, err := r2.ReadAll()
+	if err != nil {
+		fmt.Println(err)
+	}
+	expectedOutput := [][]string{[]string{"a", "b", "c"}, []string{"1", "2", "3"}}
+	assert.Equal(t, expectedOutput, lines2)
+}
+
